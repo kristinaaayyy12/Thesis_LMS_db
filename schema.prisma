@@ -1,0 +1,303 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+
+  @@index([name])
+  @@map("post")
+}
+
+// Profile model
+model Profile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  bio         String?
+  dateOfBirth DateTime? @map("date_of_birth")
+  gender      String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  Analytics Analytics[]
+  student   QuizAnswers[]
+  sender    Messages[]    @relation("SenderMessages")
+  receiver  Messages[]    @relation("ReceiverMessages")
+  reports   ReportsTable?
+
+  @@map("profile")
+}
+
+// Auth models
+
+enum UserRole {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?              @map("email_verified")
+  image                 String?
+  password              String?
+  isTwoFactorEnabled    Boolean                @default(false)
+  role                  UserRole               @default(STUDENT)
+  Accounts              Account[]
+  Posts                 Post[]
+  VerificationToken     VerificationToken[]
+  PasswordResetToken    PasswordResetToken[]
+  TwoFactorToken        TwoFactorToken[]
+  TwoFactorConfirmation TwoFactorConfirmation?
+  Profile               Profile?
+
+  @@map("user")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("account")
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+  user    User     @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@unique([email, token])
+  @@map("verification_token")
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+  user    User     @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@unique([email, token])
+  @@map("password_reset_token")
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+  user    User     @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@unique([email, token])
+  @@map("two_factor_token")
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("two_factor_confimation")
+}
+
+model CourseTable {
+  code              String    @id @default(cuid()) @db.VarChar(20)
+  courseTitle       String    @db.VarChar(255)
+  courseDescription String    @db.Text
+  bio               String    @db.Text
+  videoCall         String    @db.VarChar(2083)
+  forum             String    @db.VarChar(2083)
+  syllabus          Syllabus?
+  archive           Boolean   @default(false)
+  createdAt         DateTime  @default(now()) @db.Timestamp
+  updatedAt         DateTime  @updatedAt @db.Timestamp
+}
+
+model Syllabus {
+  id              String          @id @default(cuid())
+  syllabusContent String          @db.Text
+  lessons         LessonTable[]
+  activities      ActivityTable[]
+  quizzes         QuizTable[]
+  createdAt       DateTime        @default(now()) @db.Timestamp
+  updatedAt       DateTime        @updatedAt @db.Timestamp
+  courseCode      String          @unique
+  course          CourseTable     @relation(fields: [courseCode], references: [code], onDelete: Cascade)
+}
+
+model LessonTable {
+  id                String          @id @default(cuid())
+  lessonTitle       String          @db.VarChar(255)
+  lessonDescription String          @db.Text
+  syllabusID        String
+  syllabus          Syllabus        @relation(fields: [syllabusID], references: [id], onDelete: Cascade)
+  contents          LessonContent[]
+  createdAt         DateTime        @default(now()) @db.Timestamp
+  updatedAt         DateTime        @updatedAt @db.Timestamp
+}
+
+model LessonContent {
+  id            String      @id @default(cuid())
+  lessonID      String
+  lesson        LessonTable @relation(fields: [lessonID], references: [id], onDelete: Cascade)
+  lessonContent String      @db.Text
+  videoFileURL  String      @db.VarChar(2083)
+  videoURL      String      @db.VarChar(2083)
+  imageURL      String      @db.VarChar(2083)
+  createdAt     DateTime    @default(now()) @db.Timestamp
+  updatedAt     DateTime    @updatedAt @db.Timestamp
+}
+
+model ActivityTable {
+  id                  String            @id @default(cuid())
+  activityTitle       String            @db.VarChar(255)
+  activityDescription String            @db.VarChar(255)
+  syllabusID          String
+  syllabus            Syllabus          @relation(fields: [syllabusID], references: [id], onDelete: Cascade)
+  contents            ActivityContent[]
+  createdAt           DateTime          @default(now()) @db.Timestamp
+  updatedAt           DateTime          @updatedAt @db.Timestamp
+}
+
+model ActivityContent {
+  id              String        @id @default(cuid())
+  activityID      String
+  activity        ActivityTable @relation(fields: [activityID], references: [id], onDelete: Cascade)
+  activityContent String        @db.Text
+  createdAt       DateTime      @default(now()) @db.Timestamp
+  updatedAt       DateTime      @updatedAt @db.Timestamp
+}
+
+enum QuizType {
+  multiple_choice
+  enumeration
+  identification
+}
+
+model QuizTable {
+  id              String      @id @default(cuid())
+  quizTitle       String      @db.VarChar(255)
+  quizDescription String      @db.Text
+  type            QuizType
+  items           QuizItems[]
+  createdAt       DateTime    @default(now()) @db.Timestamp
+  updatedAt       DateTime    @updatedAt @db.Timestamp
+
+  syllabusID String
+  syllabus   Syllabus @relation(fields: [syllabusID], references: [id], onDelete: Cascade)
+}
+
+model QuizItems {
+  id       String       @id @default(cuid())
+  question String       @db.Text
+  options  Json //for multiple choice
+  answers  QuizAnswers?
+  quizID   String
+  quiz     QuizTable    @relation(fields: [quizID], references: [id], onDelete: Cascade)
+}
+
+model QuizAnswers {
+  id        String    @id @default(cuid())
+  itemsID   String    @unique
+  quiz      QuizItems @relation(fields: [itemsID], references: [id], onDelete: Cascade)
+  studentID String
+  student   Profile   @relation(fields: [studentID], references: [id], onDelete: Cascade)
+  answer    String    @db.Text
+  createdAt DateTime  @default(now()) @db.Timestamp
+  updatedAt DateTime  @updatedAt @db.Timestamp
+}
+
+model ReportsTable {
+  id        String       @id @default(cuid())
+  year      Int
+  semester  String       @db.VarChar(100)
+  term      String       @db.VarChar(100)
+  block     String       @db.VarChar(50)
+  termGrade TermGrades[]
+  createdAt DateTime     @default(now()) @db.Timestamp
+  updatedAt DateTime     @updatedAt @db.Timestamp
+  profileID String       @unique
+  profile   Profile      @relation(fields: [profileID], references: [id], onDelete: Cascade)
+}
+
+model TermGrades {
+  id        String       @id @default(cuid())
+  prelim    Decimal      @db.Decimal(5, 2)
+  midterm   Decimal      @db.Decimal(5, 2)
+  final     Decimal      @db.Decimal(5, 2)
+  reportsID String
+  reports   ReportsTable @relation(fields: [reportsID], references: [id], onDelete: Cascade)
+}
+
+model Analytics {
+  id           String  @id @default(cuid())
+  userID       String
+  user         Profile @relation(fields: [userID], references: [id], onDelete: Cascade)
+  progressData Json
+
+  @@map("analytics_table")
+}
+
+enum ChatType {
+  personal
+  group
+}
+
+model Messages {
+  id         String @id @default(cuid())
+  senderID   String
+  receiverID String
+  groupID    String
+
+  message String   @db.Text
+  type    ChatType
+  sentAt  DateTime @default(now()) @db.Timestamp
+
+  sender    Profile   @relation("SenderMessages", fields: [senderID], references: [id], onDelete: Cascade)
+  receiver  Profile   @relation("ReceiverMessages", fields: [receiverID], references: [id], onDelete: Cascade)
+  groupChat GroupChat @relation(fields: [groupID], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model GroupChat {
+  id        String     @id @default(cuid())
+  groupName String     @db.VarChar(100)
+  messages  Messages[]
+  createdAt DateTime   @default(now()) @db.Timestamp
+  updatedAt DateTime   @updatedAt @db.Timestamp
+}
