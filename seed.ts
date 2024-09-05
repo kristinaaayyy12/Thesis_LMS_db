@@ -354,15 +354,15 @@ async function main() {
   });
   console.log(newActivityContent);
 
-  const newQuizTable = await prisma.quizTable.create({
+  const newQuizTable = await prisma.quizTable.createMany({
     data: [{
       quizTitle: "quiz 103",
       quizDescription: "description ng quiz",
       createdAt: new Date("2023-12-31T23:59:59Z"),
       updatedAt: new Date("2023-12-31T23:59:59Z"),
 
-      syllabus: { connect: { id: "syllabus id" } },
-      type: "multiple choice"
+      syllabusID: "syllabus id",
+      type: "multiple_choice",
     },
     {
       quizTitle: "quiz 103",
@@ -370,7 +370,7 @@ async function main() {
       createdAt: new Date("2023-12-31T23:59:59Z"),
       updatedAt: new Date("2023-12-31T23:59:59Z"),
 
-      syllabus: { connect: { id: "syllabus id" } },
+      syllabusID: "syllabus id",
       type: "enumeration"
     },
     {
@@ -379,10 +379,10 @@ async function main() {
       createdAt: new Date("2023-12-31T23:59:59Z"),
       updatedAt: new Date("2023-12-31T23:59:59Z"),
 
-      syllabus: { connect: { id: "syllabus id" } },
+      syllabusID: "syllabus id",
       type: "identification"
     },
-    ]
+    ],
   });
   console.log(newQuizTable);
 
@@ -419,12 +419,6 @@ async function main() {
       itemsID: "quiz item id",
       studentID: "some student id",
       answer: "Paris",
-      quiz: {
-        connect: { id: "quiz item id" }
-      },
-      student: {
-        connect: { id: "student id" }
-      }
     },
   });
   console.log(newQuizAnswers);
@@ -452,10 +446,58 @@ async function main() {
 
   const newTermGrade = await prisma.termGrades.create({
     data: {
-      prelim: new prisma.termGrades: decimal("Prelim", { precision: 5, scale: 2 })
+      prelim: 90.0,
+      midterm: 91.65,
+      final: 90.87,
+      reportsID: "reports id",
     },
   });
+  console.log(newTermGrade);
 
+  const newAnalytics = await prisma.analytics.create({
+    data: {
+      userID: "user id",
+      progressData: JSON.stringify(""),
+    },
+  });
+  console.log(newAnalytics);
+
+  const newMessages = await prisma.messages.createMany({
+    data: [{
+      senderID: "sender id",
+      receiverID: "receiver id",
+      groupID: "group id",
+      message: "Hi! Good morning",
+      type: "personal",
+      sentAt: new Date("2023-12-31T23:59:59Z"),
+    },
+
+    {
+      senderID: "sender id",
+      receiverID: "receiver id",
+      groupID: "group id",
+      message: "Hi! Good morning",
+      type: "group",
+      sentAt: new Date("2023-12-31T23:59:59Z"),
+    },
+    ]
+  });
+  console.log(newMessages);
+
+  const newGroupChat = await prisma.groupChat.create({
+    data: {
+      groupName: "THS101",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+    },
+  });
+  console.log(newGroupChat);
+
+  const messages = await prisma.groupChat.findMany({
+    include: {
+      messages: true,
+    },
+  });
 }
 
 main()
