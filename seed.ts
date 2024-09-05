@@ -310,6 +310,151 @@ async function main() {
   })
   console.log(lesson);
 
+  const newLessonContent = await prisma.lessonContent.create({
+    data: {
+      lessonID: "lesson101",
+      lessonContent: "Basta may content dito",
+      videoFileURL: "https://example.com/videofile",
+      videoURL: "https://example.com/video",
+      imageURL: "https://example.com/image",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+    },
+  });
+  console.log(newLessonContent);
+
+  const newActivityTable = await prisma.activityTable.create({
+    data: {
+      activityTitle: "Calculator",
+      activityDescription: "description ng activity",
+      syllabusID: "id ng syllabus",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+    },
+  });
+  console.log(newActivityTable);
+
+  const activity = await prisma.activityTable.findUnique({
+    where: {
+      id: "activity table id",
+    },
+    include: {
+      contents: true
+    },
+  });
+  console.log(activity);
+
+  const newActivityContent = await prisma.activityContent.create({
+    data: {
+      activityID: "activity102",
+      activityContent: "content ng activity",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+    },
+  });
+  console.log(newActivityContent);
+
+  const newQuizTable = await prisma.quizTable.create({
+    data: [{
+      quizTitle: "quiz 103",
+      quizDescription: "description ng quiz",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+
+      syllabus: { connect: { id: "syllabus id" } },
+      type: "multiple choice"
+    },
+    {
+      quizTitle: "quiz 103",
+      quizDescription: "description ng quiz",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+
+      syllabus: { connect: { id: "syllabus id" } },
+      type: "enumeration"
+    },
+    {
+      quizTitle: "quiz 103",
+      quizDescription: "description ng quiz",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+
+      syllabus: { connect: { id: "syllabus id" } },
+      type: "identification"
+    },
+    ]
+  });
+  console.log(newQuizTable);
+
+  const quiz = await prisma.quizTable.findUnique({
+    where: {
+      id: "quiz table id",
+    },
+    include: {
+      items: true
+    },
+  });
+  console.log(quiz);
+
+  const newQuizItems = await prisma.quizItems.create({
+    data: {
+      question: "Thesis?",
+      options: JSON.stringify(["A", "B", "C", "D"]),
+      quiz: {
+        connect: { id: "quiz id" },
+      },
+    },
+  });
+  console.log(newQuizItems);
+
+  const quizItemswithAnswers = await prisma.quizItems.findMany({
+    include: {
+      answers: true,
+    },
+  });
+  console.log(quizItemswithAnswers);
+
+  const newQuizAnswers = await prisma.quizAnswers.create({
+    data: {
+      itemsID: "quiz item id",
+      studentID: "some student id",
+      answer: "Paris",
+      quiz: {
+        connect: { id: "quiz item id" }
+      },
+      student: {
+        connect: { id: "student id" }
+      }
+    },
+  });
+  console.log(newQuizAnswers);
+
+  const newReports = await prisma.reportsTable.create({
+    data: {
+      year: 2024,
+      semester: "First Semester",
+      term: "Prelim",
+      block: "4G",
+      createdAt: new Date("2023-12-31T23:59:59Z"),
+      updatedAt: new Date("2023-12-31T23:59:59Z"),
+
+      profileID: "profile id",
+    },
+  });
+  console.log(newReports);
+
+  const reports = await prisma.reportsTable.findMany({
+    include: {
+      termGrade: true
+    },
+  });
+  console.log(reports);
+
+  const newTermGrade = await prisma.termGrades.create({
+    data: {
+      prelim: new prisma.termGrades: decimal("Prelim", { precision: 5, scale: 2 })
+    },
+  });
 
 }
 
